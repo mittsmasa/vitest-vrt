@@ -4,18 +4,24 @@
   "type": "module",
   "scripts": {
     "test:visual": "vitest tests/visual/*.test.tsx",
-    "test:visual:update": "vitest tests/visual/*.test.tsx --update"
+    "test:visual:update": "vitest tests/visual/*.test.tsx --update",
+    "storybook": "storybook dev -p 6006",
+    "storybook:build": "storybook build"
   },
   "devDependencies": {
-    "vitest": "4.0.6",
+    "@storybook/react": "10.0.2",
+    "@storybook/react-vite": "10.0.2",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "4.3.4",
     "@vitest/browser": "4.0.6",
     "@vitest/browser-playwright": "4.0.6",
+    "@vitest/ui": "4.0.6",
     "playwright": "1.56.1",
-    "vite": "6.4.1",
-    "@vitejs/plugin-react": "4.3.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.2"
+    "storybook": "10.0.2",
+    "vite": "6.4.1",
+    "vitest": "4.0.6"
   }
 }

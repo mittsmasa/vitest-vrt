@@ -37,3 +37,6 @@ pnpm-debug.log*
 # Playwright
 playwright-report/
 test-results/
+html/
+
+tests/visual/__screenshots__/
