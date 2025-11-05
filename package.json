@@ -1,0 +1,21 @@
+{
+  "name": "vitest-vrt-sample",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test:visual": "vitest tests/visual/*.test.tsx",
+    "test:visual:update": "vitest tests/visual/*.test.tsx --update"
+  },
+  "devDependencies": {
+    "vitest": "4.0.6",
+    "@vitest/browser": "4.0.6",
+    "@vitest/browser-playwright": "4.0.6",
+    "playwright": "1.56.1",
+    "vite": "6.4.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2"
+  }
+}
