@@ -2,6 +2,7 @@
   "name": "vitest-vrt-sample",
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "test:visual": "vitest tests/visual/*.test.tsx",
     "test:visual:update": "vitest tests/visual/*.test.tsx --update",
