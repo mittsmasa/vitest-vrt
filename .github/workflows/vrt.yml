@@ -47,6 +47,7 @@ jobs:
       changed: ${{ steps.analyze.outputs.changed }}
       deleted: ${{ steps.analyze.outputs.deleted }}
       total: ${{ steps.analyze.outputs.total }}
+      has_diff: ${{ steps.analyze.outputs.has_diff }}
     steps:
       - name: Checkout PR branch
         uses: actions/checkout@v4
@@ -80,54 +81,56 @@ jobs:
       - name: Analyze VRT results
         id: analyze
         run: |
-          # スナップショットの状態を分析
-          NEW=0
-          CHANGED=0
-          DELETED=0
-          TOTAL=0
+          # vitest-results.json から結果を解析
+          if [ ! -f "__vrt-result__/vitest-results.json" ]; then
+            echo "vitest-results.json not found"
+            echo "new=0" >> $GITHUB_OUTPUT
+            echo "changed=0" >> $GITHUB_OUTPUT
+            echo "deleted=0" >> $GITHUB_OUTPUT
+            echo "total=0" >> $GITHUB_OUTPUT
+            echo "has_diff=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
-          # .vitest-attachments に差分画像があるかチェック（変更されたスナップショット）
+          # JSON から testResults を解析
+          TOTAL=$(jq '.testResults | length' __vrt-result__/vitest-results.json)
+
+          # 失敗したテスト（スナップショットの差異）をカウント
+          FAILED=$(jq '[.testResults[] | select(.status == "failed")] | length' __vrt-result__/vitest-results.json)
+
+          # 成功したテスト
+          PASSED=$(jq '[.testResults[] | select(.status == "passed")] | length' __vrt-result__/vitest-results.json)
+
+          # 差分画像の数（changed）
+          CHANGED=0
           if [ -d ".vitest-attachments" ]; then
             CHANGED=$(find .vitest-attachments -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
           fi
 
-          # 現在のスナップショット数
-          if [ -d "tests/visual/__screenshots__" ]; then
-            CURRENT=$(find tests/visual/__screenshots__ -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
-          else
-            CURRENT=0
-          fi
-
-          # 期待値として復元されたスナップショット数を記録（実行前にカウントすべきだったので、ここでは概算）
-          # 実際には、changed がある場合は TOTAL = CURRENT, NEW = CURRENT - (元の数) だが
-          # 簡略化のため、差分がある場合はその数を CHANGED、ない場合は全て一致とする
+          # 新規・削除の判定は複雑なため、ここでは CHANGED のみを正確に表示
+          # FAILED がある場合は差分あり
+          NEW=0
+          DELETED=0
+          HAS_DIFF="false"
 
           if [ $CHANGED -gt 0 ]; then
-            # 差分がある場合
-            TOTAL=$CURRENT
-            # 新規と削除の判定は複雑なため、ここでは CHANGED のみカウント
-            # より正確な判定には、事前に期待値のリストを保存しておく必要がある
-          else
-            # 差分がない場合は全て一致
-            TOTAL=$CURRENT
-            NEW=0
-            CHANGED=0
-            DELETED=0
+            HAS_DIFF="true"
           fi
 
           echo "new=$NEW" >> $GITHUB_OUTPUT
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
           echo "deleted=$DELETED" >> $GITHUB_OUTPUT
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "has_diff=$HAS_DIFF" >> $GITHUB_OUTPUT
 
-          echo "VRT Results: NEW=$NEW CHANGED=$CHANGED DELETED=$DELETED TOTAL=$TOTAL"
+          echo "VRT Results: CHANGED=$CHANGED TOTAL=$TOTAL HAS_DIFF=$HAS_DIFF"
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
         if: always()
         with:
           name: vrt-html-report
-          path: html/
+          path: __vrt-result__/html/
           retention-days: 3
 
   upload_ghpages:
@@ -185,6 +188,9 @@ jobs:
           rm -rf "$PR_DIR"/*
           cp -r vrt-report/* "$PR_DIR/"
 
+          # vrt-reportディレクトリを削除
+          rm -rf vrt-report
+
           # 変更をコミット
           git add .
 
@@ -216,12 +222,31 @@ jobs:
             const changedCount = '${{ needs.vrt.outputs.changed }}';
             const deletedCount = '${{ needs.vrt.outputs.deleted }}';
             const totalCount = '${{ needs.vrt.outputs.total }}';
+            const hasDiff = '${{ needs.vrt.outputs.has_diff }}' === 'true';
 
             const repoName = '${{ steps.repo.outputs.repo_name }}';
             const owner = '${{ steps.repo.outputs.owner }}';
             const vrtUrl = `https://${owner}.github.io/${repoName}/pr/${prNumber}/vrt/`;
 
-            const commentBody = `<!-- VRT_REPORT -->
+            let commentBody = '';
+
+            if (!hasDiff) {
+              // 差分がない場合
+              commentBody = `<!-- VRT_REPORT -->
+            ## 📸 Visual Regression Test Results
+
+            ### ✨ 差分なし！やったね！ 🎉
+
+            全てのビジュアルテスト（${totalCount}件）がベースラインと一致しています。
+
+            [📋 View Full Report](${vrtUrl})
+
+            ---
+            *Last updated: ${new Date().toISOString()}*
+            `;
+            } else {
+              // 差分がある場合
+              commentBody = `<!-- VRT_REPORT -->
             ## 📸 Visual Regression Test Results
 
             | Status | Count |
@@ -236,6 +261,7 @@ jobs:
             ---
             *Last updated: ${new Date().toISOString()}*
             `;
+            }
 
             // 既存のVRTコメントを検索
             const comments = await github.rest.issues.listComments({

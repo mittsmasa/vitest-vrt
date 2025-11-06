@@ -5,7 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   test: {
-    reporters: ['html', "default"],
+    reporters: [
+      ['html', { outputFile: '__vrt-result__/html/index.html' }],
+      ['json', { outputFile: '__vrt-result__/vitest-results.json' }],
+      'default'
+    ],
     browser: {
       enabled: true,
       headless: true,
