@@ -92,28 +92,31 @@ jobs:
             exit 0
           fi
 
-          # JSON から testResults を解析
-          TOTAL=$(jq '.testResults | length' __vrt-result__/vitest-results.json)
+          # JSON から統計情報を取得
+          TOTAL=$(jq '.numTotalTests' __vrt-result__/vitest-results.json)
+          PASSED=$(jq '.numPassedTests' __vrt-result__/vitest-results.json)
+          FAILED=$(jq '.numFailedTests' __vrt-result__/vitest-results.json)
 
-          # 失敗したテスト（スナップショットの差異）をカウント
-          FAILED=$(jq '[.testResults[] | select(.status == "failed")] | length' __vrt-result__/vitest-results.json)
-
-          # 成功したテスト
-          PASSED=$(jq '[.testResults[] | select(.status == "passed")] | length' __vrt-result__/vitest-results.json)
-
-          # 差分画像の数（changed）
+          # 差分の詳細をカウント
+          # failedテストの中から実際の差分を取得
           CHANGED=0
           if [ -d ".vitest-attachments" ]; then
-            CHANGED=$(find .vitest-attachments -name "*.png" 2>/dev/null | wc -l | tr -d ' ')
+            CHANGED=$(find .vitest-attachments -name "*-actual-*.png" 2>/dev/null | wc -l | tr -d ' ')
           fi
 
-          # 新規・削除の判定は複雑なため、ここでは CHANGED のみを正確に表示
-          # FAILED がある場合は差分あり
+          # 新規・削除の判定
+          # CHANGED が FAILED と等しい場合は既存テストの変更のみ
+          # FAILED > CHANGED の場合は新規追加の可能性
           NEW=0
           DELETED=0
-          HAS_DIFF="false"
 
-          if [ $CHANGED -gt 0 ]; then
+          if [ $FAILED -gt $CHANGED ]; then
+            # 失敗したテストの中に差分画像がないものは新規
+            NEW=$((FAILED - CHANGED))
+          fi
+
+          HAS_DIFF="false"
+          if [ $CHANGED -gt 0 ] || [ $NEW -gt 0 ]; then
             HAS_DIFF="true"
           fi
 
@@ -123,7 +126,7 @@ jobs:
           echo "total=$TOTAL" >> $GITHUB_OUTPUT
           echo "has_diff=$HAS_DIFF" >> $GITHUB_OUTPUT
 
-          echo "VRT Results: CHANGED=$CHANGED TOTAL=$TOTAL HAS_DIFF=$HAS_DIFF"
+          echo "VRT Results: NEW=$NEW CHANGED=$CHANGED DELETED=$DELETED TOTAL=$TOTAL HAS_DIFF=$HAS_DIFF"
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
