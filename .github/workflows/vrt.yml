@@ -46,7 +46,7 @@ jobs:
       new: ${{ steps.analyze.outputs.new }}
       changed: ${{ steps.analyze.outputs.changed }}
       deleted: ${{ steps.analyze.outputs.deleted }}
-      total: ${{ steps.analyze.outputs.total }}
+      passed: ${{ steps.analyze.outputs.passed }}
       has_diff: ${{ steps.analyze.outputs.has_diff }}
     steps:
       - name: Checkout PR branch
@@ -87,7 +87,7 @@ jobs:
             echo "new=0" >> $GITHUB_OUTPUT
             echo "changed=0" >> $GITHUB_OUTPUT
             echo "deleted=0" >> $GITHUB_OUTPUT
-            echo "total=0" >> $GITHUB_OUTPUT
+            echo "passed=0" >> $GITHUB_OUTPUT
             echo "has_diff=false" >> $GITHUB_OUTPUT
             exit 0
           fi
@@ -123,10 +123,10 @@ jobs:
           echo "new=$NEW" >> $GITHUB_OUTPUT
           echo "changed=$CHANGED" >> $GITHUB_OUTPUT
           echo "deleted=$DELETED" >> $GITHUB_OUTPUT
-          echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          echo "passed=$PASSED" >> $GITHUB_OUTPUT
           echo "has_diff=$HAS_DIFF" >> $GITHUB_OUTPUT
 
-          echo "VRT Results: NEW=$NEW CHANGED=$CHANGED DELETED=$DELETED TOTAL=$TOTAL HAS_DIFF=$HAS_DIFF"
+          echo "VRT Results: NEW=$NEW CHANGED=$CHANGED DELETED=$DELETED PASSED=$PASSED TOTAL=$TOTAL HAS_DIFF=$HAS_DIFF"
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
@@ -238,7 +238,7 @@ jobs:
             const newCount = '${{ needs.vrt.outputs.new }}';
             const changedCount = '${{ needs.vrt.outputs.changed }}';
             const deletedCount = '${{ needs.vrt.outputs.deleted }}';
-            const totalCount = '${{ needs.vrt.outputs.total }}';
+            const passedCount = '${{ needs.vrt.outputs.passed }}';
             const hasDiff = '${{ needs.vrt.outputs.has_diff }}' === 'true';
 
             const repoName = '${{ steps.repo.outputs.repo_name }}';
@@ -254,7 +254,7 @@ jobs:
 
             ### ✨ 差分なし！やったね！ 🎉
 
-            全てのビジュアルテスト（${totalCount}件）がベースラインと一致しています。
+            全てのビジュアルテスト（${passedCount}件）がベースラインと一致しています。
 
             [📋 View Full Report](${vrtUrl})
 
@@ -271,7 +271,7 @@ jobs:
             | 🆕 New | ${newCount} |
             | 🔄 Changed | ${changedCount} |
             | 🗑️ Deleted | ${deletedCount} |
-            | 📊 Total | ${totalCount} |
+            | ✅ Passed | ${passedCount} |
 
             [📋 View Full Report](${vrtUrl})
 
