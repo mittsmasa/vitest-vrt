@@ -30,7 +30,7 @@ jobs:
         run: ./node_modules/.bin/playwright install chromium --with-deps
 
       - name: Generate expected snapshots
-        run: pnpm test:visual --run
+        run: pnpm test:visual:update
 
       - name: Cache expected snapshots
         uses: actions/cache/save@v4
