@@ -281,24 +281,17 @@ jobs:
             <details>
             <summary>🔧 ローカルで再現する方法</summary>
 
-            1. ベースブランチのスナップショットを生成:
-               \`\`\`bash
-               git checkout ${{ github.base_ref }}
-               pnpm install
-               pnpm test:visual:update --run
-               \`\`\`
+            \`\`\`bash
+            # gh-pagesブランチにチェックアウト
+            git fetch origin gh-pages
+            git checkout gh-pages
 
-            2. PRブランチに切り替えてVRTを実行:
-               \`\`\`bash
-               git checkout ${{ github.head_ref }}
-               pnpm install
-               pnpm test:visual --run
-               \`\`\`
+            # PR用のレポートディレクトリに移動
+            cd pr/${{ github.event.pull_request.number }}/vrt
 
-            3. レポートを確認:
-               \`\`\`bash
-               pnpm exec vite preview --outDir __vrt-result__/html
-               \`\`\`
+            # ローカルでレポートを確認
+            pnpm exec vite preview .
+            \`\`\`
 
             </details>
             `;
