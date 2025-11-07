@@ -245,6 +245,32 @@ jobs:
             const owner = '${{ steps.repo.outputs.owner }}';
             const vrtUrl = `https://${owner}.github.io/${repoName}/pr/${prNumber}/vrt/`;
 
+            const localReproductionSteps = `
+            <details>
+            <summary>🔧 ローカルで再現する方法</summary>
+
+            1. ベースブランチのスナップショットを生成:
+               \`\`\`bash
+               git checkout ${{ github.base_ref }}
+               pnpm install
+               pnpm test:visual:update --run
+               \`\`\`
+
+            2. PRブランチに切り替えてVRTを実行:
+               \`\`\`bash
+               git checkout ${{ github.head_ref }}
+               pnpm install
+               pnpm test:visual --run
+               \`\`\`
+
+            3. レポートを確認:
+               \`\`\`bash
+               pnpm exec vite preview --outDir __vrt-result__/html
+               \`\`\`
+
+            </details>
+            `;
+
             let commentBody = '';
 
             if (!hasDiff) {
@@ -257,6 +283,8 @@ jobs:
             全てのビジュアルテスト（${passedCount}件）がベースラインと一致しています。
 
             [📋 View Full Report](${vrtUrl})
+
+            ${localReproductionSteps}
 
             ---
             *Last updated: ${new Date().toISOString()}*
@@ -274,6 +302,8 @@ jobs:
             | ✅ Passed | ${passedCount} |
 
             [📋 View Full Report](${vrtUrl})
+
+            ${localReproductionSteps}
 
             ---
             *Last updated: ${new Date().toISOString()}*
