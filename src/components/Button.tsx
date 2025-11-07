@@ -8,8 +8,8 @@ interface ButtonProps {
 export function Button({ children, variant = 'primary' }: ButtonProps) {
   const styles: React.CSSProperties = {
     display: 'inline-block',
-    padding: '12px 24px',
-    borderRadius: '8px',
+    // padding: '12px 24px',
+    // borderRadius: '8px',
     border: 'none',
     cursor: 'pointer',
     fontSize: '16px',
