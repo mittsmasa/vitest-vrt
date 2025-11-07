@@ -372,3 +372,4 @@ jobs:
               });
               console.log('Created new VRT comment');
             }
+
